@@ -1,3 +1,6 @@
+> [!WARNING]
+> This project is entirely vibecoded. Use at your own risk.
+
 # server-inspector
 
 Hardware detection and inventory tool for servers.

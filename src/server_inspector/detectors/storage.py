@@ -115,6 +115,55 @@ class StorageDetector:
         return DEFAULT_BLOCK_SIZE
 
     @staticmethod
+    def _get_nvme_lba_formats(name: str) -> list[dict[str, Any]]:
+        """Parse NVMe LBA format capabilities from nvme id-ns.
+
+        Returns a list of LBA formats with data_size and relative_performance.
+        Example: [{"id": 0, "data_size": 512, "rp": 0}, {"id": 1, "data_size": 4096, "rp": 1}]
+        """
+        output = run_command(["nvme", "id-ns", f"/dev/{name}"])
+        if not output:
+            return []
+
+        formats: list[dict[str, Any]] = []
+        for match in re.finditer(
+            r"lbaf\s+(\d+)\s*:.*?ds:(\d+).*?rp:(0x[0-9a-fA-F]+|\d+)",
+            output,
+        ):
+            lba_id = int(match.group(1))
+            # ds field is log2(data_size), e.g. 9 = 512B, 12 = 4096B
+            ds_exponent = int(match.group(2))
+            data_size = 2**ds_exponent
+            rp_str = match.group(3)
+            rp = int(rp_str, 16) if rp_str.startswith("0x") else int(rp_str)
+            formats.append({"id": lba_id, "data_size": data_size, "rp": rp})
+
+        return formats
+
+    @staticmethod
+    def _get_recommended_block_size(name: str, disk_type: str) -> int:
+        """Get recommended block size for ashift calculation.
+
+        - NVMe: check LBA formats for 4096-byte support; default to 4096
+        - SSD: default to 4096 (modern SSDs are all 4K+ internally)
+        - HDD: trust sysfs physical_block_size
+        """
+        if disk_type == "NVMe":
+            lba_formats = StorageDetector._get_nvme_lba_formats(name)
+            if lba_formats:
+                # If any LBA format supports 4096 or larger, recommend that
+                max_lba_size = max(f["data_size"] for f in lba_formats)
+                return max(4096, max_lba_size)
+            # No parseable LBAF data — safe default for all modern NVMe
+            return 4096
+
+        if disk_type == "SSD":
+            return 4096
+
+        # HDD: trust the sysfs value
+        return StorageDetector._get_physical_block_size(name)
+
+    @staticmethod
     def _get_smart_data(name: str) -> dict[str, Any]:
         """Collect SMART data for a device (requires root)."""
         smart_data: dict[str, Any] = {}
@@ -198,6 +247,7 @@ class StorageDetector:
                 "wwn": wwn,
                 "eui": eui,
                 "physical_block_size": StorageDetector._get_physical_block_size(name),
+                "recommended_block_size": StorageDetector._get_recommended_block_size(name, disk_type),
                 "by_id_links": by_id_links,
             }
 

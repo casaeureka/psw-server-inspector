@@ -19,6 +19,7 @@ from .detectors.network import NetworkDetector
 from .detectors.storage import StorageDetector
 from .detectors.system import SystemDetector
 from .detectors.usb import USBControllerDetector
+from .detectors.usb_devices import USBDeviceDetector
 from .utils import PSUTIL_AVAILABLE, print_error, print_header, print_status, print_success, print_warning
 
 VERSION: str = __version__
@@ -44,6 +45,7 @@ class ServerInspector:
             "network": {},
             "gpu": [],
             "usb_controllers": [],
+            "usb_devices": [],
             "motherboard": {},
             "ipmi": {},
             "system": {},
@@ -104,7 +106,13 @@ class ServerInspector:
         self.specs["usb_controllers"] = self._detect_and_report(
             "USB Controllers",
             USBControllerDetector.detect,
-            lambda r: f"USB: {len(r)} controller(s) found",
+            lambda r: f"USB Controllers: {len(r)} found",
+        )
+        self.specs["usb_devices"] = self._detect_and_report(
+            "USB Devices",
+            USBDeviceDetector.detect,
+            lambda r: f"USB Devices: {len(r)} found (serial adapters, dongles)",
+            fallback=(bool, "No USB serial devices detected"),
         )
         self.specs["motherboard"] = self._detect_and_report(
             "Motherboard",
@@ -195,6 +203,8 @@ class ServerInspector:
 
         if self.specs.get("usb_controllers"):
             hw["usb_controllers"] = self.specs["usb_controllers"]
+        if self.specs.get("usb_devices"):
+            hw["usb_devices"] = self.specs["usb_devices"]
         if self.specs.get("motherboard"):
             hw["motherboard"] = self.specs["motherboard"]
         if self.specs.get("ipmi"):

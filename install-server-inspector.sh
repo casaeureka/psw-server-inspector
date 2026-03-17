@@ -293,7 +293,17 @@ main() {
         log_error "Failed to install server-inspector"
         exit 1
     }
-    log_info "server-inspector installed"
+
+    # Hard verify: the binary must exist after install
+    if ! command -v server-inspector &>/dev/null; then
+        log_error "uv tool install reported success but 'server-inspector' binary not found in PATH"
+        log_error "Checked: \$HOME/.local/bin/server-inspector = $HOME/.local/bin/server-inspector"
+        ls -la "$HOME/.local/bin/server-inspector" 2>/dev/null || log_error "  -> does not exist"
+        log_error "uv tool list:"
+        uv tool list 2>&1 | grep -i server-inspector || log_error "  -> not in uv tool list"
+        exit 1
+    fi
+    log_info "server-inspector installed: $(command -v server-inspector)"
 
     # System dependencies
     # server-inspector uses: lspci, ethtool, dmidecode, smartctl, nvme, ipmitool, lscpu, lsblk, etc.
@@ -306,12 +316,25 @@ main() {
     install_pkg ipmitool        # IPMI/BMC management interface
 
     # Create symlink so it works without PATH changes
-    _run_privileged ln -sf "$HOME/.local/bin/server-inspector" /usr/local/bin/server-inspector
+    local bin_path
+    bin_path="$(command -v server-inspector)"
+    if [[ ! -f "$bin_path" ]]; then
+        log_error "Cannot find server-inspector binary to create symlink"
+        exit 1
+    fi
+    _run_privileged ln -sf "$bin_path" /usr/local/bin/server-inspector
+
+    # Final verification: the symlink must resolve to a real binary
+    if ! /usr/local/bin/server-inspector --version &>/dev/null; then
+        log_error "Symlink created but /usr/local/bin/server-inspector doesn't work"
+        ls -la /usr/local/bin/server-inspector 2>&1 | sed 's/^/  /'
+        exit 1
+    fi
 
     echo
     log_info "Setup complete!"
     echo
-    echo "  Verify: $(command -v server-inspector &>/dev/null && echo "server-inspector found" || echo "server-inspector NOT found")"
+    echo "  Installed: $(command -v server-inspector) -> $(/usr/local/bin/server-inspector --version 2>&1 || echo 'unknown version')"
     echo
     echo "  Usage:"
     echo "    server-inspector <name>  → generates server-specs-<name>.json + hardware-<name>.yml"

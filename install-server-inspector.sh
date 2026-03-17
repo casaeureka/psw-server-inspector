@@ -306,9 +306,10 @@ main() {
     log_info "server-inspector installed: $(command -v server-inspector)"
 
     # System dependencies
-    # server-inspector uses: lspci, ethtool, dmidecode, smartctl, nvme, ipmitool, lscpu, lsblk, etc.
+    # server-inspector uses: lspci, ethtool, dmidecode, smartctl, nvme, ipmitool, lsusb, lscpu, lsblk, etc.
     log_info "Installing server-inspector system dependencies..."
     install_pkg pciutils        # lspci (GPU, NIC, USB controller detection)
+    install_pkg usbutils        # lsusb (USB serial device detection: Zigbee, Z-Wave dongles)
     install_pkg ethtool         # network interface speed detection
     install_pkg dmidecode       # motherboard, memory, BIOS info
     install_pkg smartmontools   # smartctl (storage health)

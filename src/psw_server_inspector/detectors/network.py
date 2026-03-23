@@ -6,9 +6,9 @@ import socket
 from pathlib import Path
 from typing import Any
 
-from server_inspector.parsers.iommu import get_iommu_group
-from server_inspector.parsers.pci import extract_pci_address_from_path, parse_pci_ids, parse_subsystem_id
-from server_inspector.utils import MBPS_TO_GBPS_DIVISOR, PSUTIL_AVAILABLE, run_command, sanitize_device_name
+from psw_server_inspector.parsers.iommu import get_iommu_group
+from psw_server_inspector.parsers.pci import extract_pci_address_from_path, parse_pci_ids, parse_subsystem_id
+from psw_server_inspector.utils import MBPS_TO_GBPS_DIVISOR, PSUTIL_AVAILABLE, run_command, sanitize_device_name
 
 from .network_pcie import detect_current_network, detect_pcie_cards
 

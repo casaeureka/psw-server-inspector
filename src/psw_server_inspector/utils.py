@@ -8,7 +8,7 @@ import subprocess
 import sys
 from typing import NoReturn
 
-from server_inspector.colors import Colors
+from psw_server_inspector.colors import Colors
 
 logger = logging.getLogger(__name__)
 

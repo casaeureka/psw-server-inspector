@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from server_inspector.utils import (
+from psw_server_inspector.utils import (
     MB_PER_GB,
     PB_TO_TB_MULTIPLIER,
     TB_TO_GB_MULTIPLIER,

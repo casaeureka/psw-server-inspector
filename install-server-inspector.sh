@@ -289,7 +289,7 @@ main() {
 
     # Install server-inspector from GitHub
     log_info "Installing server-inspector from GitHub..."
-    install_from_github casaeureka/server-inspector || {
+    install_from_github casaeureka/psw-server-inspector || {
         log_error "Failed to install server-inspector"
         exit 1
     }

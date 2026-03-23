@@ -3,9 +3,9 @@
 import re
 from typing import Any
 
-from server_inspector.parsers.iommu import get_iommu_group
-from server_inspector.parsers.pci import parse_subsystem_id
-from server_inspector.utils import run_command
+from psw_server_inspector.parsers.iommu import get_iommu_group
+from psw_server_inspector.parsers.pci import parse_subsystem_id
+from psw_server_inspector.utils import run_command
 
 
 class USBControllerDetector:

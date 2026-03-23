@@ -4,7 +4,7 @@ import math
 import re
 from typing import Any
 
-from server_inspector.utils import (
+from psw_server_inspector.utils import (
     BYTES_PER_GB,
     COMMON_RAM_SIZES_GB,
     KB_PER_GB,

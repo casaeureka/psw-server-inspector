@@ -5,9 +5,9 @@ import re
 from pathlib import Path
 from typing import Any
 
-from server_inspector.parsers.iommu import get_iommu_group
-from server_inspector.parsers.pci import extract_pci_address_from_path, parse_subsystem_id
-from server_inspector.utils import run_command
+from psw_server_inspector.parsers.iommu import get_iommu_group
+from psw_server_inspector.parsers.pci import extract_pci_address_from_path, parse_subsystem_id
+from psw_server_inspector.utils import run_command
 
 
 def get_pci_to_interface_map() -> dict[str, list[str]]:

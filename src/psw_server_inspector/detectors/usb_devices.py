@@ -8,7 +8,7 @@ import os
 import re
 from typing import Any
 
-from server_inspector.utils import run_command
+from psw_server_inspector.utils import run_command
 
 
 class USBDeviceDetector:

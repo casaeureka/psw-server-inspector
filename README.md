@@ -1,7 +1,7 @@
 > [!WARNING]
 > This project is entirely vibecoded. Use at your own risk.
 
-# server-inspector
+# psw-server-inspector
 
 Hardware detection and inventory tool for servers.
 
@@ -10,7 +10,7 @@ Detects CPU, memory, storage, network, GPU, USB controllers, motherboard, IPMI/B
 ## Quick Install
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/casaeureka/server-inspector/main/install-server-inspector.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/casaeureka/psw-server-inspector/main/install-server-inspector.sh)"
 ```
 
 The installer handles everything: Python 3.14, uv, system dependencies (pciutils, ethtool, dmidecode, smartmontools, nvme-cli, ipmitool), and the tool itself.
@@ -18,13 +18,13 @@ The installer handles everything: Python 3.14, uv, system dependencies (pciutils
 If curl isn't available (common on minimal installs):
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/casaeureka/server-inspector/main/install-server-inspector.sh | bash
+wget -qO- https://raw.githubusercontent.com/casaeureka/psw-server-inspector/main/install-server-inspector.sh | bash
 ```
 
 Or via uv directly:
 
 ```bash
-uv tool install server-inspector
+uv tool install psw-server-inspector
 ```
 
 ## Usage
@@ -93,7 +93,7 @@ Designed to feed into the [casaeureka](https://github.com/casaeureka) toolchain:
 
 - **[proxmox-wizard](https://github.com/casaeureka/proxmox-wizard)** — imports via `hardware-detect` for automated Proxmox setup
 - **[storage-planner](https://github.com/casaeureka/storage-planner)** — reads hardware.yml for AI storage planning
-- **[disk-wiper](https://github.com/casaeureka/disk-wiper)** — wipe drives before Proxmox install
+- **[psw-disk-wiper](https://github.com/casaeureka/psw-disk-wiper)** — wipe drives before Proxmox install
 
 ## Notes
 

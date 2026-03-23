@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "server-inspector"
+name = "psw-server-inspector"
 version = "0.1.0"
 description = "Hardware detection and inventory for server"
 readme = "README.md"
@@ -26,23 +26,23 @@ dependencies = [
 ]
 
 [project.scripts]
-server-inspector = "server_inspector.main:main"
+server-inspector = "psw_server_inspector.main:main"
 
 [project.urls]
-Homepage = "https://github.com/casaeureka/server-inspector"
-Repository = "https://github.com/casaeureka/server-inspector"
-Issues = "https://github.com/casaeureka/server-inspector/issues"
+Homepage = "https://github.com/casaeureka/psw-server-inspector"
+Repository = "https://github.com/casaeureka/psw-server-inspector"
+Issues = "https://github.com/casaeureka/psw-server-inspector/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/server_inspector"]
+packages = ["src/psw_server_inspector"]
 
 [tool.hatch.build.targets.wheel.sources]
 "src" = ""
 
 [tool.hatch.build]
 include = [
-    "src/server_inspector/**/*.py",
-    "src/server_inspector/**/*.sh",
+    "src/psw_server_inspector/**/*.py",
+    "src/psw_server_inspector/**/*.sh",
 ]
 
 [tool.ruff]
@@ -61,14 +61,14 @@ section-order = [
     "first-party",
     "local-folder",
 ]
-known-first-party = ["server_inspector"]
+known-first-party = ["psw_server_inspector"]
 
 [tool.mypy]
 python_version = "3.14"
 warn_return_any = true
 warn_unused_ignores = true
 disallow_untyped_defs = true
-packages = ["server_inspector"]
+packages = ["psw_server_inspector"]
 
 [dependency-groups]
 dev = [

@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from server_inspector.utils import PSUTIL_AVAILABLE, run_command
+from psw_server_inspector.utils import PSUTIL_AVAILABLE, run_command
 
 if PSUTIL_AVAILABLE:
     import psutil

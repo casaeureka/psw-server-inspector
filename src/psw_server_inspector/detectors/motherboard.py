@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from server_inspector.utils import is_root, run_command
+from psw_server_inspector.utils import is_root, run_command
 
 
 class MotherboardDetector:

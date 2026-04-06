@@ -14,12 +14,10 @@ from psw_server_inspector.utils import run_command
 class USBDeviceDetector:
     """Detect USB serial devices (dongles, adapters)."""
 
-    # Known USB device types by vendor:product ID
+    # Known USB device types by vendor:product ID.
+    # Chips used by a SINGLE device type only — safe to classify by ID alone.
     KNOWN_DEVICES: dict[str, str] = {
         # Zigbee adapters
-        "1a86:55d4": "zigbee",   # SONOFF Zigbee 3.0 (CH9102)
-        "1a86:7523": "zigbee",   # CH340 (common Zigbee adapter)
-        "10c4:ea60": "zigbee",   # Silicon Labs CP2102 (Zigbee/generic)
         "10c4:8a2a": "zigbee",   # Silicon Labs (Zigbee coordinator)
         "1cf1:0030": "zigbee",   # ConBee II
         "0451:16a8": "zigbee",   # TI CC2531/CC2652 (Zigbee)
@@ -31,6 +29,21 @@ class USBDeviceDetector:
         # Generic serial adapters
         "0403:6001": "serial",   # FTDI FT232
         "067b:2303": "serial",   # Prolific PL2303
+    }
+
+    # Chips shared by MULTIPLE device types — require by-id name or lsusb
+    # description to disambiguate. Tested against _NAME_PATTERNS first;
+    # the fallback type is used only if no pattern matches.
+    AMBIGUOUS_DEVICES: dict[str, str] = {
+        "1a86:55d4": "serial",   # CH9102 — Zigbee (SONOFF) AND Z-Wave (Zooz 800)
+        "1a86:7523": "serial",   # CH340  — common in both Zigbee and generic serial
+        "10c4:ea60": "serial",   # CP2102 — Zigbee (SONOFF v1) AND generic serial
+    }
+
+    # Patterns matched against by-id name or lsusb description (case-insensitive)
+    _NAME_PATTERNS: dict[str, list[str]] = {
+        "zigbee": ["zigbee", "conbee", "cc2531", "cc2652"],
+        "zwave": ["z-wave", "zwave", "zooz"],
     }
 
     @staticmethod
@@ -56,7 +69,7 @@ class USBDeviceDetector:
 
                 # Classify device type
                 vid_pid = f"{dev_info.get('vendor_id', '')}:{dev_info.get('product_id', '')}"
-                dev_info["type"] = USBDeviceDetector.KNOWN_DEVICES.get(vid_pid, "unknown")
+                dev_info["type"] = _classify_device(vid_pid, dev_info)
 
                 devices.append(dev_info)
 
@@ -67,6 +80,32 @@ class USBDeviceDetector:
             devices.extend(lsusb_devices)
 
         return devices
+
+
+def _classify_device(vid_pid: str, dev_info: dict[str, Any]) -> str:
+    """Classify a USB device by vendor:product ID, with name-based disambiguation.
+
+    For unambiguous chips, the KNOWN_DEVICES lookup is sufficient.
+    For ambiguous chips (same chip used by zigbee AND zwave products),
+    the by-id name and description are checked against name patterns.
+    """
+    # Unambiguous — direct lookup
+    known = USBDeviceDetector.KNOWN_DEVICES.get(vid_pid)
+    if known is not None:
+        return known
+
+    # Ambiguous chip — need name-based disambiguation
+    if vid_pid in USBDeviceDetector.AMBIGUOUS_DEVICES:
+        text = " ".join([
+            dev_info.get("by_id_name", ""),
+            dev_info.get("description", ""),
+        ]).lower()
+        for device_type, patterns in USBDeviceDetector._NAME_PATTERNS.items():
+            if any(p in text for p in patterns):
+                return device_type
+        return USBDeviceDetector.AMBIGUOUS_DEVICES[vid_pid]
+
+    return "unknown"
 
 
 def _parse_serial_by_id_name(name: str) -> dict[str, Any]:
@@ -105,8 +144,17 @@ def _enrich_with_lsusb(dev_info: dict[str, Any]) -> None:
     # e.g., /dev/ttyUSB0 → find the USB parent in /sys
     dev_name = os.path.basename(device)
 
-    # Try to read vendor/product from sysfs
-    for base in [f"/sys/class/tty/{dev_name}/device", f"/sys/class/tty/{dev_name}/../.."]:
+    # Try to read vendor/product from sysfs.
+    # ttyUSB* devices have idVendor at device/ (the USB-serial chip).
+    # ttyACM* devices have idVendor one level up (device/../) because
+    # device/ points to the CDC ACM interface, not the USB device.
+    sysfs_base = f"/sys/class/tty/{dev_name}"
+    search_paths = [
+        os.path.join(sysfs_base, "device"),           # ttyUSB: chip device
+        os.path.join(sysfs_base, "device", ".."),      # ttyACM: parent USB device
+        os.path.join(sysfs_base, "..", ".."),           # legacy fallback
+    ]
+    for base in search_paths:
         vendor_path = os.path.join(base, "idVendor")
         product_path = os.path.join(base, "idProduct")
         if os.path.exists(vendor_path) and os.path.exists(product_path):
@@ -149,14 +197,15 @@ def _scan_lsusb_for_known_devices() -> list[dict[str, Any]]:
             continue
         bus, dev_num, vid, pid, desc = match.groups()
         vid_pid = f"{vid}:{pid}"
-        if vid_pid in USBDeviceDetector.KNOWN_DEVICES:
-            devices.append({
+        if vid_pid in USBDeviceDetector.KNOWN_DEVICES or vid_pid in USBDeviceDetector.AMBIGUOUS_DEVICES:
+            dev_info = {
                 "vendor_id": vid,
                 "product_id": pid,
                 "description": desc.strip(),
-                "type": USBDeviceDetector.KNOWN_DEVICES[vid_pid],
                 "bus": bus,
                 "device_number": dev_num,
-            })
+            }
+            dev_info["type"] = _classify_device(vid_pid, dev_info)
+            devices.append(dev_info)
 
     return devices
